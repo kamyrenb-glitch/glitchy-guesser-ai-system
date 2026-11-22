@@ -1,0 +1,7 @@
+flowchart TD
+    Player[Player] --> App[Streamlit Game App]
+    App --> Engine[Number Guessing Game Engine]
+    Engine --> Bot[AI Competitor Agent]
+    Bot --> Guards[Five Guardrails]
+    Guards --> Log[Decision and Safety Logs]
+    Engine --> State[Game Session State]
