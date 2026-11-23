@@ -47,9 +47,19 @@ def parse_guess(raw: str, low=None, high=None):
     if raw is None:
         return False, None, "Enter a guess."
 
+    if not isinstance(raw, str):
+        return False, None, "Enter a whole number."
+
     text = raw.strip()
     if text == "":
         return False, None, "Enter a guess."
+
+    if (low is None) != (high is None):
+        return False, None, "The allowed number range is invalid."
+    if low is not None and (
+        type(low) is not int or type(high) is not int or low > high
+    ):
+        return False, None, "The allowed number range is invalid."
 
     try:
         value = int(text)
