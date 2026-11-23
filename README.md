@@ -99,7 +99,16 @@ The decision log records only `turn`, `range_before`, `guess`, `reason`, `outcom
 
 ## Testing and Evaluation
 
-The latest verified results are:
+### Reliability Summary
+
+- **Automated tests:** 18 of 18 passed with `python -m pytest`.
+- **Exhaustive evaluation:** all 320 possible secrets were tested across Easy, Normal, and Hard.
+- **Bot performance:** a 100% win rate within each difficulty's turn limit.
+- **Guardrails:** zero violations were recorded.
+- **Human evaluation:** five of five manual checks passed.
+- **Plain pytest:** the original import-path failure was fixed with `conftest.py`.
+
+### Exhaustive Evaluation Results
 
 | Difficulty | Secrets tested | Win rate | Average turns | Worst-case turns | Guardrail violations |
 |---|---:|---:|---:|---:|---:|
@@ -107,11 +116,17 @@ The latest verified results are:
 | Normal | 100 | 100% | 5.80 | 7 | 0 |
 | Hard | 200 | 100% | 6.76 | 8 | 0 |
 
-`python -m pytest` reports **18 passed**. An initial import-path issue with plain `pytest` was resolved by adding the root `conftest.py`.
+### Human Evaluation
 
-The manual UI review checklist covers invalid input leaving both turn counts unchanged, a valid input triggering exactly one bot turn, inspection of bot decision logs, checking that the secret is not exposed to the bot or its logs, and confirming that **New Game** resets the round state. The exhaustive evaluation tests every possible secret and records wins, turn counts, and guardrail violations.
+| Test | Input or Action | Evaluation Criteria | Observed Result | Status |
+|---|---|---|---|---|
+| Invalid input | Enter `hello` and submit. | Reject non-numeric input without consuming a player attempt or bot turn. | The UI displayed “That is not a whole number.” Attempts remained at 8 and bot turns remained at 0. | Pass |
+| Valid competitive turn | Enter `25` on Normal difficulty. | Use one player attempt and trigger exactly one bot turn. | Attempts changed from 8 to 7 and bot turns changed from 0 to 1. The bot began with midpoint guess 50. | Pass |
+| Outcome-only bot log | Open the Bot Decision Log after the valid turn. | Record the bot's reasoning and outcome without exposing the secret. | The log recorded turn, range before, guess 50, midpoint reason, outcome, and range after. It contained no secret field. | Pass |
+| Player-facing debug information | Open Developer Debug Info. | Show non-secret state while keeping the secret hidden. | It displayed attempts, scores, bot turns, winner, status, difficulty, and player history without displaying the secret. | Pass |
+| Reset behavior | Click **New Game**. | Safely reset the player and bot state for a fresh round. | Attempts, scores, turns, winner, player history, and bot decision log reset successfully. | Pass |
 
-This project reinforced the importance of separating an agent from secret game state and testing deterministic behavior across the entire input space, rather than relying only on a few sample rounds.
+Reliability improved through strict input validation, secret isolation, deterministic behavior, exhaustive testing, and human review. Separating the bot from secret game state and checking every possible secret made its behavior easier to verify and reproduce.
 
 ## Repository Structure
 
