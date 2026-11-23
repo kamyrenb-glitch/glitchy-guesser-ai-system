@@ -1,7 +1,27 @@
 flowchart TD
-    Player[Player] --> App[Streamlit Game App]
-    App --> Engine[Number Guessing Game Engine]
-    Engine --> Bot[AI Competitor Agent]
-    Bot --> Guards[Five Guardrails]
-    Guards --> Log[Decision and Safety Logs]
-    Engine --> State[Game Session State]
+    Player["Player input<br/>numeric guess"] --> UI["Streamlit UI<br/>app.py"]
+    UI --> Guardrails["Input and state guardrails<br/>validate guesses and state; enforce bounds and turn limit"]
+    Guardrails --> Engine["Game engine<br/>logic_utils.py<br/>secret remains here"]
+    Engine -->|Player hint| UI
+
+    Engine -->|Too High, Too Low, or Win only| Observe
+    subgraph BotAgent["GuesserBot agent<br/>bot_agent.py"]
+        Observe["Observe outcome"] --> Narrow["Narrow range"]
+        Narrow --> Midpoint["Plan midpoint"]
+        Midpoint --> Act["Act<br/>submit bot guess"]
+    end
+    Act -->|Bot guess| Guardrails
+    Guardrails -->|Validated bot guess| Engine
+
+    Guardrails --> Logs["Decision and safety logs"]
+    Act --> Logs
+    Logs --> UI
+    UI --> Output["UI output<br/>hints, scores, turns, winner, and bot log"]
+    Output --> Review["Human review through the UI"]
+
+    Pytest["pytest"] -.-> Guardrails
+    Pytest -.-> Engine
+    Pytest -.-> Observe
+    Evaluator["Exhaustive evaluator<br/>evaluate_bot.py"] -.-> Guardrails
+    Evaluator -.-> Engine
+    Evaluator -.-> Observe
