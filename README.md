@@ -4,6 +4,18 @@ Game Glitch Investigator is a Streamlit number-guessing game where a human compe
 
 The project emphasizes a transparent agent, explicit input and state guardrails, and decision logs that can be reviewed through the UI. Exhaustive evaluation checks the bot against every possible secret on every difficulty, making its behavior reproducible and its safety claims testable.
 
+## Portfolio
+
+- **GitHub repository:** [kamyrenb-glitch/glitchy-guesser-ai-system](https://github.com/kamyrenb-glitch/glitchy-guesser-ai-system)
+- [Architecture diagram](./diagrams/architecture.mmd)
+- [Model card](./model_card.md)
+- [AI interactions log](./ai_interactions.md)
+- [Presentation and demo plan](./presentation.md)
+
+### What This Project Says About Me as an AI Engineer
+
+I do not treat AI as a black box: I design clear information boundaries, validate inputs and state, add guardrails, and make decisions inspectable through logs. I test performance claims rather than assuming a system works, including by checking every possible secret in the supported ranges. I use AI coding tools as collaborators, but I keep human review and final decisions in the process. I also consider whether the experience is usable and fair, whether its behavior is transparent, and what ethical limitations or failure cases remain.
+
 ## Project Background
 
 The original Modules 1–3 project, **“Glitchy Guesser,”** was a human number-guessing game with difficulty settings, input validation, directional hints, scoring, attempt limits, and tests. It focused on fixing game-state and feedback behavior while keeping the game logic testable. This version evolves that project with a competitive AI agent, safety guardrails, decision logging, and exhaustive evaluation.
@@ -128,16 +140,106 @@ The decision log records only `turn`, `range_before`, `guess`, `reason`, `outcom
 
 Reliability improved through strict input validation, secret isolation, deterministic behavior, exhaustive testing, and human review. Separating the bot from secret game state and checking every possible secret made its behavior easier to verify and reproduce.
 
+## Reproducible Execution Evidence
+
+This evidence is sufficient to review the automated checks, game behavior, and agent trace without watching a video.
+
+### Automated Test Command
+
+Command: `python -m pytest`
+
+```text
+collected 18 items
+
+tests\test_bot_agent.py ..............                                     [ 77%]
+tests\test_game_logic.py ....                                               [100%]
+
+============================= 18 passed in 0.13s =============================
+```
+
+### Exhaustive Evaluation Command
+
+Command: `python evaluate_bot.py`
+
+```text
+Difficulty | Secrets | Win rate | Average turns | Worst-case turns | Guardrail violations
+Easy | 20 | 100.00% | 3.70 | 5 | 0
+Normal | 100 | 100.00% | 5.80 | 7 | 0
+Hard | 200 | 100.00% | 6.76 | 8 | 0
+```
+
+### End-to-End Example Runs
+
+#### Example 1 — Invalid Input
+
+```text
+Difficulty: Normal
+Input: hello
+Output: That is not a whole number.
+Attempts left: 8
+Bot turns: 0
+Guardrail: Rejected without consuming either turn.
+```
+
+#### Example 2 — Valid Competitive Turn
+
+```text
+Difficulty: Normal
+Input: 25
+Player output: Go HIGHER!
+Attempts left: 8 -> 7
+Player score: -5
+Bot turns: 0 -> 1
+Bot score: -5
+Bot planned midpoint: 50
+Bot outcome: Too High
+Bot range: 1-100 -> 1-49
+Bot log: No secret field.
+```
+
+#### Example 3 — Reset
+
+```text
+Action: Click New Game
+Output: A fresh round
+Player and bot scores: 0
+Bot turns: 0
+Winner, player history, and bot decision log: cleared
+Guardrail: State reset safely.
+```
+
+### AI Agent Decision Trace
+
+The evaluation harness held secret 37; the bot received only outcome feedback.
+
+| Turn | Range Before | Guess | Reason | Outcome | Range After |
+|---:|---|---:|---|---|---|
+| 1 | 1-100 | 50 | midpoint of narrowed range | Too High | 1-49 |
+| 2 | 1-49 | 25 | midpoint of narrowed range | Too Low | 26-49 |
+| 3 | 26-49 | 37 | midpoint of narrowed range | Win | 26-49 |
+
+### Reliability and Guardrail Result
+
+- **Automated tests:** 18/18 passed.
+- **Exhaustive evaluation:** 320/320 possible secrets solved.
+- **Win rate:** 100% on every difficulty, within its turn limit.
+- **Guardrail violations:** 0.
+- **Human evaluation:** 5/5 checks passed.
+
 ## Repository Structure
 
 ```text
 .
+├── README.md                 # Project overview and reproducible evidence
 ├── app.py                    # Streamlit UI and game/session orchestration
 ├── logic_utils.py            # Difficulty settings, parsing, outcomes, hints, scoring
 ├── bot_agent.py              # Outcome-only binary-search GuesserBot
 ├── evaluate_bot.py           # Exhaustive per-difficulty evaluation
 ├── conftest.py               # Shared pytest fixtures
 ├── requirements.txt          # Runtime and test dependencies
+├── model_card.md             # Responsible-AI reflection
+├── ai_interactions.md        # Agent workflow and evaluation evidence
+├── presentation.md           # Timed presentation and demo plan
 ├── diagrams/
 │   └── architecture.mmd      # System and verification flowchart
 └── tests/
